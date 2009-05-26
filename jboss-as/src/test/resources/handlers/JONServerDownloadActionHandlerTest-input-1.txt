@@ -1,2 +1,0 @@
-Sample file that the JONServerDownloadActionHandlerTest can read and provide as bits to download
-in the test.
