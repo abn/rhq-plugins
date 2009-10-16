@@ -9,23 +9,22 @@
    </parent>
 
    <groupId>org.rhq</groupId>
-   <artifactId>rhq-hosts-plugin</artifactId>
+   <artifactId>rhq-sudoers-plugin</artifactId>
    <packaging>jar</packaging>
 
-   <name>RHQ Hosts File Plugin</name>
-   <description>A plugin for managing the system hosts file</description>
+   <name>RHQ Augeas-based Sudoers Plugin</name>
+   <description>A plugin for managing the *nix sudoers file</description>
 
    <scm>
-      <connection>scm:git:ssh://git.fedorahosted.org/git/rhq.git/modules/plugins/hosts</connection>
-      <developerConnection>scm:git:ssh://git.fedorahosted.org/git/rhq.git/modules/plugins/hosts</developerConnection>
+      <connection>scm:git:ssh://git.fedorahosted.org/git/rhq.git/modules/plugins/sudoers</connection>
+      <developerConnection>scm:git:ssh://git.fedorahosted.org/git/rhq.git/modules/plugins/sudoers</developerConnection>
    </scm>
 
    <properties>
-      <scm.module.path>modules/plugins/hosts/</scm.module.path>
+      <scm.module.path>modules/plugins/sudoers/</scm.module.path>
    </properties>
 
    <dependencies>
-
       <dependency>
          <groupId>${rhq.groupId}</groupId>
          <artifactId>rhq-platform-plugin</artifactId>
@@ -38,7 +37,6 @@
           <artifactId>rhq-augeas-plugin</artifactId>
           <version>${project.version}</version>
        </dependency>
-       
    </dependencies>
 
    <profiles>
