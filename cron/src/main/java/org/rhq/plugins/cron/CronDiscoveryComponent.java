@@ -16,17 +16,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.rhq.plugins.samba;
+package org.rhq.plugins.cron;
 
-import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
-import org.rhq.core.pluginapi.inventory.ResourceDiscoveryContext;
 import org.rhq.plugins.augeas.AugeasConfigurationDiscoveryComponent;
+import org.rhq.plugins.platform.PlatformComponent;
 
-import java.util.Set;
-
-public class SambaServerDiscoveryComponent extends AugeasConfigurationDiscoveryComponent {
-
-    public Set discoverResources(ResourceDiscoveryContext resourceDiscoveryContext) throws InvalidPluginConfigurationException, Exception {
-        return super.discoverResources(resourceDiscoveryContext);
-    }
+/**
+ * @author Lukas Krejci
+ */
+public class CronDiscoveryComponent extends AugeasConfigurationDiscoveryComponent<PlatformComponent> {
+    //the super class provides everything we need...
 }
