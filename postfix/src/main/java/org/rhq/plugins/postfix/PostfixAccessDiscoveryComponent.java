@@ -1,6 +1,6 @@
 /*
  * RHQ Management Platform
- * Copyright (C) 2005-2008 Red Hat, Inc.
+ * Copyright (C) 2005-2009 Red Hat, Inc.
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,35 +16,35 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.rhq.plugins.apt;
+
+package org.rhq.plugins.postfix;
 
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.pluginapi.inventory.DiscoveredResourceDetails;
 import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
-import org.rhq.core.pluginapi.inventory.ResourceDiscoveryComponent;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryContext;
+import org.rhq.plugins.augeas.AugeasConfigurationDiscoveryComponent;
 
 /**
- * @author Jason Dobies
+ * @author paji
+ *
  */
-public class AptSourcesDiscoveryComponent implements ResourceDiscoveryComponent {
-
-    public Set discoverResources(ResourceDiscoveryContext resourceDiscoveryContext) throws InvalidPluginConfigurationException, Exception {
+public class PostfixAccessDiscoveryComponent extends AugeasConfigurationDiscoveryComponent<PostfixAccessComponent> {
+    public Set<DiscoveredResourceDetails> discoverResources(
+        ResourceDiscoveryContext<PostfixAccessComponent> discoveryContext) throws InvalidPluginConfigurationException,
+        Exception {
 
         Set<DiscoveredResourceDetails> details = new HashSet<DiscoveredResourceDetails>();
-
-        File sourcesFile = new File("/etc/apt/sources.list");
-
-        if (sourcesFile.exists()) {
-            DiscoveredResourceDetails resource =
-                new DiscoveredResourceDetails(resourceDiscoveryContext.getResourceType(), "apt-sources", "Apt Sources Service",
-                    "1.0", "Apt sources in use on the machine.", null, null);
-
-            details.add(resource);
+        if (new File("/etc/postfix/access").exists()) {
+            Configuration pluginConfig = discoveryContext.getDefaultPluginConfiguration();
+            DiscoveredResourceDetails detail = new DiscoveredResourceDetails(discoveryContext.getResourceType(),
+                "Access", "Access File", null, "Access", pluginConfig, null);
+            details.add(detail);
         }
-
         return details;
     }
 }
