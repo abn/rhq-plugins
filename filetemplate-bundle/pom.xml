@@ -9,41 +9,59 @@
    </parent>
 
    <groupId>org.rhq</groupId>
-   <artifactId>rhq-samba-plugin</artifactId>
+   <artifactId>rhq-filetemplate-bundle-plugin</artifactId>
    <packaging>jar</packaging>
 
-   <name>RHQ Augeas-based Samba Plugin</name>
-   <description>A plugin for managing the RHEL samba file</description>
+   <name>RHQ File Template Bundle Plugin</name>
+   <description>a plugin that processes file template bundles</description>
 
    <scm>
-      <connection>scm:git:ssh://git.fedorahosted.org/git/rhq.git/modules/plugins/samba</connection>
-      <developerConnection>scm:git:ssh://git.fedorahosted.org/git/rhq.git/modules/plugins/samba</developerConnection>
+      <connection>scm:git:ssh://git.fedorahosted.org/git/rhq.git/modules/plugins/filetemplate-bundle/</connection>
+      <developerConnection>scm:git:ssh://git.fedorahosted.org/git/rhq.git/modules/plugins/filetemplate-bundle/</developerConnection>
    </scm>
 
    <properties>
-      <scm.module.path>modules/plugins/samba/</scm.module.path>
+      <scm.module.path>modules/plugins/filetemplate-bundle/</scm.module.path>
    </properties>
 
    <dependencies>
 
-      <dependency>
-        <groupId>org.rhq</groupId>
-        <artifactId>rhq-augeas-plugin</artifactId>
-        <version>${project.version}</version>
-      </dependency>
 
    </dependencies>
 
-    <build>
-       <plugins>
-          <plugin>
-             <artifactId>maven-surefire-plugin</artifactId>
-             <configuration>
-                <skip>true</skip>
-             </configuration>
-          </plugin>
-       </plugins>
-    </build>
+   <build>
+      <plugins>
+
+         <!--
+         <plugin>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>2.0</version>
+            <executions>
+               <execution>
+                  <id>copy-rhq-plugins</id>
+                  <phase>process-resources</phase>
+                  <goals>
+                     <goal>copy</goal>
+                  </goals>
+                  <configuration>
+                     <artifactItems>
+
+                        <artifactItem>
+                           <groupId>org.jboss</groupId>
+                           <artifactId>byteman</artifactId>
+                           <version>1.2.0</version>
+                        </artifactItem>
+
+                     </artifactItems>
+                     <outputDirectory>${project.build.outputDirectory}/lib</outputDirectory>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         -->
+
+      </plugins>
+   </build>
 
    <profiles>
       <profile>
@@ -57,6 +75,7 @@
 
          <build>
             <plugins>
+               <!-- Integration testing voodoo to load and test this plugin with its plugin dependencies -->
                <plugin>
                   <artifactId>maven-antrun-plugin</artifactId>
                   <executions>
@@ -64,23 +83,19 @@
                         <phase>pre-integration-test</phase>
                         <configuration>
                            <tasks>
-                              <echo>Setting up integration test plugin container environment under target/itest/...</echo>
-
+                              <echo>Setting up plugin dependencies for ${project.artifactId}-${project.version}.jar...</echo>
                               <property name="settings.localRepository" location="${user.home}/.m2/repository" />
-
+                              <mkdir dir="target/itest" />
                               <mkdir dir="target/itest/plugins" />
-                              <copy toDir="target/itest/plugins" flatten="true" verbose="true">
-                                 <!-- the plugin jar for this plugin -->
-                                 <fileset dir="${project.build.directory}" includes="${project.artifactId}-${project.version}.jar" />
-                                 <!-- the plugin jars for the plugins this plugin depends on -->
+                              <mkdir dir="target/itest/lib" />
+                              <copy toDir="target/itest/plugins" flatten="true">
                                  <fileset dir="${settings.localRepository}/">
                                     <include name="org/rhq/rhq-platform-plugin/${project.version}/rhq-platform-plugin-${project.version}.jar" />
-                                    <include name="org/rhq/rhq-augeas-plugin/${project.version}/rhq-augeas-plugin-${project.version}.jar" />
+                                 </fileset>
+                                 <fileset dir="${project.build.directory}">
+                                    <include name="${project.artifactId}-${project.version}.jar" />
                                  </fileset>
                               </copy>
-
-                              <!-- copy SIGAR jar and native libs into the lib dir -->
-                              <mkdir dir="target/itest/lib" />
                               <unzip dest="target/itest/lib">
                                  <fileset dir="${settings.localRepository}/org/hyperic/sigar-dist/${sigar.version}" includes="*.zip" />
                                  <patternset>
@@ -107,7 +122,6 @@
                   </executions>
                </plugin>
 
-               <!-- Integration testing voodoo to load and test this plugin with its plugin dependencies -->
                <plugin>
                   <artifactId>maven-surefire-plugin</artifactId>
                   <configuration>
@@ -123,7 +137,7 @@
                         <configuration>
                            <skip>${maven.test.skip}</skip>
                            <excludedGroups>${rhq.testng.excludedGroups}</excludedGroups>
-                           <useSystemClassLoader>true</useSystemClassLoader>
+                           <useSystemClassLoader>false</useSystemClassLoader>
                            <argLine>-Dorg.hyperic.sigar.path=${basedir}/target/itest/lib</argLine>
                            <!--<argLine>-Dorg.hyperic.sigar.path=${basedir}/target/itest/lib -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y</argLine>-->
                            <systemProperties>
@@ -142,6 +156,7 @@
                </plugin>
 
             </plugins>
+
          </build>
       </profile>
 
@@ -151,32 +166,30 @@
          <properties>
             <rhq.rootDir>../../..</rhq.rootDir>
             <rhq.containerDir>${rhq.rootDir}/${rhq.defaultDevContainerPath}</rhq.containerDir>
-            <rhq.deploymentDir>
-               ${rhq.containerDir}/jbossas/server/default/deploy/${rhq.earName}/rhq-downloads/rhq-plugins
-            </rhq.deploymentDir>
+            <rhq.deploymentDir>${rhq.containerDir}/jbossas/server/default/deploy/${rhq.earName}/rhq-downloads/rhq-plugins</rhq.deploymentDir>
          </properties>
 
          <build>
             <plugins>
 
                <plugin>
-                  <artifactId>maven-antrun-plugin</artifactId>
-                  <version>1.1</version>
-                  <executions>
+                 <artifactId>maven-antrun-plugin</artifactId>
+                 <version>1.1</version>
+                 <executions>
 
                      <execution>
                         <id>deploy</id>
                         <phase>compile</phase>
                         <configuration>
-                           <tasks>
-                              <mkdir dir="${rhq.deploymentDir}" />
-                              <property name="deployment.file" location="${rhq.deploymentDir}/${project.build.finalName}.jar" />
-                              <echo>*** Updating ${deployment.file}...</echo>
-                              <jar destfile="${deployment.file}" basedir="${project.build.outputDirectory}" />
-                           </tasks>
+                          <tasks>
+                            <mkdir dir="${rhq.deploymentDir}" />
+                            <property name="deployment.file" location="${rhq.deploymentDir}/${project.build.finalName}.jar" />
+                            <echo>*** Updating ${deployment.file}...</echo>
+                            <jar destfile="${deployment.file}" basedir="${project.build.outputDirectory}" update="true" />
+                          </tasks>
                         </configuration>
                         <goals>
-                           <goal>run</goal>
+                          <goal>run</goal>
                         </goals>
                      </execution>
 
@@ -203,18 +216,18 @@
                         <id>undeploy</id>
                         <phase>clean</phase>
                         <configuration>
-                           <tasks>
-                              <property name="deployment.file" location="${rhq.deploymentDir}/${project.build.finalName}.jar" />
-                              <echo>*** Deleting ${deployment.file}...</echo>
-                              <delete file="${deployment.file}" />
-                           </tasks>
+                          <tasks>
+                            <property name="deployment.file" location="${rhq.deploymentDir}/${project.build.finalName}.jar" />
+                            <echo>*** Deleting ${deployment.file}...</echo>
+                            <delete file="${deployment.file}" />
+                          </tasks>
                         </configuration>
                         <goals>
-                           <goal>run</goal>
+                          <goal>run</goal>
                         </goals>
                      </execution>
 
-                  </executions>
+                   </executions>
                </plugin>
 
             </plugins>
