@@ -16,30 +16,34 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.rhq.plugins.modcluster;
 
-import org.rhq.core.domain.measurement.AvailabilityType;
-import org.rhq.plugins.jmx.MBeanResourceComponent;
+package org.rhq.plugins.modcluster.helper;
+
+import org.mc4j.ems.connection.bean.EmsBean;
 
 /**
  * @author Stefan Negrea
  *
  */
-@SuppressWarnings({ "rawtypes" })
-public class ModclusterServerComponent extends MBeanResourceComponent {
+public class JBossHelper {
 
-    /* (non-Javadoc)
-     * @see org.rhq.plugins.jmx.MBeanResourceComponent#getAvailability()
-     */
-    @Override
-    public AvailabilityType getAvailability() {
-        String rawProxyInfo = (String) getEmsBean().getAttribute("proxyInfo").refresh().toString();
-        ProxyInfo proxyInfo = new ProxyInfo(rawProxyInfo);
+    public static String getRawProxyInfo(EmsBean emsBean) {
+        String rawProxyInfo = null;
 
-        if (proxyInfo.getAvailableContexts().size() == 0) {
-            return AvailabilityType.DOWN;
+        //try first to get the value for JBoss EAP5.x or AS6
+        try {
+            rawProxyInfo = (String) emsBean.getAttribute("ProxyInfo").refresh().toString();
+        } catch (Exception e) {
         }
 
-        return super.getAvailability();
+        //if not able to get the value after the first attempt try to get the value for JBoss 4.2/4.3
+        if (rawProxyInfo == null) {
+            try {
+                rawProxyInfo = (String) emsBean.getAttribute("proxyInfo").refresh().toString();
+            } catch (Exception e) {
+            }
+        }
+
+        return rawProxyInfo;
     }
 }
