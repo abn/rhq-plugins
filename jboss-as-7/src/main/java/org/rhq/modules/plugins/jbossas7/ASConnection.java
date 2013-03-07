@@ -152,6 +152,28 @@ public class ASConnection {
      * @see #executeComplex(org.rhq.modules.plugins.jbossas7.json.Operation)
      */
     public JsonNode executeRaw(Operation operation, int timeoutSec) {
+        return executeRaw(operation, timeoutSec, true);
+    }
+
+    /**
+     * Execute an operation against the domain api. This method is doing the
+     * real work by talking to the remote server and sending JSON data, that
+     * is obtained by serializing the operation.
+     *
+     * Please do not use this API, but rather use {@link #execute(Operation)}.
+     *
+     * @param operation an Operation that should be run on the domain controller
+     * @param timeoutSec Timeout on connect and read in seconds
+     * @param retry if <true> retry the operation again by recursively calling this method
+     *
+     * @return JsonNode that describes the result
+     *
+     * @see #execute(org.rhq.modules.plugins.jbossas7.json.Operation)
+     * @see #execute(org.rhq.modules.plugins.jbossas7.json.Operation, boolean)
+     * @see #executeComplex(org.rhq.modules.plugins.jbossas7.json.Operation)
+     */
+    private JsonNode executeRaw(Operation operation, int timeoutSec, boolean retry) {
+
         long requestStartTime = System.currentTimeMillis();
 
         HttpURLConnection conn;
@@ -279,20 +301,40 @@ public class ASConnection {
         } catch (SocketTimeoutException ste) {
             log.error(operation + " timed out: " + ste.getMessage());
             conn.disconnect();
-            Result failure = new Result();
-            failure.setFailureDescription(ste.getMessage());
-            failure.setOutcome("failure");
-            failure.setRhqThrowable(ste);
-            JsonNode ret = mapper.valueToTree(failure);
-            return ret;
+
+            if (retry) {
+                return executeRaw(operation, timeoutSec, false);
+            } else {
+                Result failure = new Result();
+                failure.setFailureDescription(ste.getMessage());
+                failure.setOutcome("failure");
+                failure.setRhqThrowable(ste);
+                JsonNode ret = mapper.valueToTree(failure);
+                return ret;
+            }
         } catch (IOException ioe) {
+            log.error(operation + " failed: " + ioe.getMessage());
             conn.disconnect();
-            Result failure = new Result();
-            failure.setFailureDescription(ioe.getMessage());
-            failure.setOutcome("failure");
-            failure.setRhqThrowable(ioe);
-            JsonNode ret = mapper.valueToTree(failure);
-            return ret;
+
+            if (retry) {
+                return executeRaw(operation, timeoutSec, false);
+            } else {
+                Result failure = new Result();
+                failure.setFailureDescription(ioe.getMessage());
+                failure.setOutcome("failure");
+                failure.setRhqThrowable(ioe);
+                JsonNode ret = mapper.valueToTree(failure);
+                return ret;
+            }
+        } catch (InvalidPluginConfigurationException ipce) {
+            log.error(operation + " failed: " + ipce.getMessage());
+            conn.disconnect();
+
+            if (retry) {
+                return executeRaw(operation, timeoutSec, false);
+            } else {
+                throw ipce;
+            }
         } finally {
             long requestEndTime = System.currentTimeMillis();
             PluginStats stats = PluginStats.getInstance();
