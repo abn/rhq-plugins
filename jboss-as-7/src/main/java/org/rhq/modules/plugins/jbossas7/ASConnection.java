@@ -331,7 +331,12 @@ public class ASConnection {
             conn.disconnect();
 
             if (retry) {
-                return executeRaw(operation, timeoutSec, false);
+                try {
+                    return executeRaw(operation, timeoutSec, false);
+                } catch (Exception e) {
+                    log.error("Retry failed, throwing original error");
+                    throw ipce;
+                }
             } else {
                 throw ipce;
             }
