@@ -83,7 +83,7 @@
 
    <modules>
       <!--  core plugins  -->
-      <module>platform</module>
+<!--      <module>platform</module> -->
       <module>jmx</module>
       <module>rhq-agent</module>
       <module>noop</module>
