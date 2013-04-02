@@ -82,7 +82,7 @@
 
    <modules>
       <!--  core plugins  -->
-      <module>platform</module>
+      <!-- <module>platform</module> lives now in rhq-core repo -->
       <module>jmx</module>
       <module>rhq-agent</module>
       <module>noop</module>
